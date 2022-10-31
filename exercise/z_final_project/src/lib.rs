@@ -3,25 +3,25 @@ use std::str::FromStr;
 
 use image::DynamicImage;
 
-trait FromArgumentBuilder: Sized {
+pub trait FromArgumentBuilder: Sized {
     type Err;
     fn init_from_arg(args: Vec<String>) -> Result<Self, Self::Err>;
-    fn expected_arguments_count() -> i32;
+    fn expected_arguments_count() -> usize;
 }
 
-trait TransformOperation: Sized {
+pub trait TransformOperation {
     fn apply(&self, img: DynamicImage) -> DynamicImage;
 }
 
-trait InputOperation: Sized {
+pub trait InputOperation {
     fn apply(&self) -> DynamicImage;
 }
 
-trait OutputOperation: Sized {
+pub trait OutputOperation {
     fn apply(&self, img: DynamicImage);
 }
 
-enum RotationAngle {
+pub enum RotationAngle {
     R90,
     R180,
     R270,
@@ -35,13 +35,12 @@ impl FromStr for RotationAngle {
             "90" => Ok(RotationAngle::R90),
             "180" => Ok(RotationAngle::R180),
             "270" => Ok(RotationAngle::R270),
-            _ => Err("not supported")
+            _ => Err("not supported"),
         }
     }
 }
 
-
-struct BlurOperation {
+pub struct BlurOperation {
     value: f32,
 }
 
@@ -54,16 +53,12 @@ impl FromArgumentBuilder for BlurOperation {
         }
         let sigma_param = args.remove(0);
         match sigma_param.parse() {
-            Ok(n) => {
-                Ok(BlurOperation { value: n })
-            }
-            Err(_) => {
-                Err("sigma is not a valid f32")
-            }
+            Ok(n) => Ok(BlurOperation { value: n }),
+            Err(_) => Err("sigma is not a valid f32"),
         }
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         1
     }
 }
@@ -74,8 +69,7 @@ impl TransformOperation for BlurOperation {
     }
 }
 
-
-struct BrightenOperation {
+pub struct BrightenOperation {
     value: i32,
 }
 
@@ -88,15 +82,11 @@ impl FromArgumentBuilder for BrightenOperation {
         }
         let brightness_param = args.remove(0);
         match brightness_param.parse() {
-            Ok(n) => {
-                Ok(BrightenOperation { value: n })
-            }
-            Err(_) => {
-                Err("brightness is not a valid f32")
-            }
+            Ok(n) => Ok(BrightenOperation { value: n }),
+            Err(_) => Err("brightness is not a valid f32"),
         }
     }
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         1
     }
 }
@@ -107,8 +97,7 @@ impl TransformOperation for BrightenOperation {
     }
 }
 
-
-struct InvertOperation {}
+pub struct InvertOperation {}
 
 impl FromArgumentBuilder for InvertOperation {
     type Err = &'static str;
@@ -116,7 +105,7 @@ impl FromArgumentBuilder for InvertOperation {
         Ok(InvertOperation {})
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         0
     }
 }
@@ -129,8 +118,7 @@ impl TransformOperation for InvertOperation {
     }
 }
 
-
-struct GrayScaleOperation {}
+pub struct GrayScaleOperation {}
 
 impl FromArgumentBuilder for GrayScaleOperation {
     type Err = &'static str;
@@ -138,7 +126,7 @@ impl FromArgumentBuilder for GrayScaleOperation {
         Ok(GrayScaleOperation {})
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         0
     }
 }
@@ -149,8 +137,7 @@ impl TransformOperation for GrayScaleOperation {
     }
 }
 
-
-struct CropOperation {
+pub struct CropOperation {
     x: u32,
     y: u32,
     width: u32,
@@ -168,41 +155,38 @@ impl FromArgumentBuilder for CropOperation {
         let width_param = args.remove(0);
         let height_param = args.remove(0);
         let x = match x_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("x is not in i32");
             }
         };
         let y = match y_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("y is not in i32");
             }
         };
         let width = match width_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("width is not in i32");
             }
         };
         let height = match height_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("height is not in i32");
             }
         };
-        Ok(CropOperation { x, y, width, height })
+        Ok(CropOperation {
+            x,
+            y,
+            width,
+            height,
+        })
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         4
     }
 }
@@ -213,8 +197,7 @@ impl TransformOperation for CropOperation {
     }
 }
 
-
-struct RotateOperation {
+pub struct RotateOperation {
     rotation_angle: RotationAngle,
 }
 
@@ -226,16 +209,12 @@ impl FromArgumentBuilder for RotateOperation {
         }
         let rotation_param = args.remove(0);
         match rotation_param.parse() {
-            Ok(n) => {
-                Ok(RotateOperation { rotation_angle: n })
-            }
-            Err(_) => {
-                Err("rotation is not 90|180|270")
-            }
+            Ok(n) => Ok(RotateOperation { rotation_angle: n }),
+            Err(_) => Err("rotation is not 90|180|270"),
         }
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         1
     }
 }
@@ -250,8 +229,7 @@ impl TransformOperation for RotateOperation {
     }
 }
 
-
-struct GenerateOperation {
+pub struct GenerateOperation {
     red: u8,
     green: u8,
     blue: u8,
@@ -267,34 +245,32 @@ impl FromArgumentBuilder for GenerateOperation {
         let g_param = args.remove(0);
         let b_param = args.remove(0);
         let r = match r_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("r is not a u8");
             }
         };
         let g = match g_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("g is not a u8");
             }
         };
         let b = match b_param.parse() {
-            Ok(n) => {
-                n
-            }
+            Ok(n) => n,
             Err(_) => {
                 return Err("b is not a u8");
             }
         };
 
-        Ok(GenerateOperation { red: r, green: g, blue: b })
+        Ok(GenerateOperation {
+            red: r,
+            green: g,
+            blue: b,
+        })
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         3
     }
 }
@@ -314,8 +290,7 @@ impl InputOperation for GenerateOperation {
     }
 }
 
-
-struct FractalOperation {}
+pub struct FractalOperation {}
 
 impl FromArgumentBuilder for FractalOperation {
     type Err = &'static str;
@@ -323,7 +298,7 @@ impl FromArgumentBuilder for FractalOperation {
         Ok(FractalOperation {})
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         0
     }
 }
@@ -365,8 +340,7 @@ impl InputOperation for FractalOperation {
     }
 }
 
-
-struct OpenFileOperation {
+pub struct OpenFileOperation {
     infile: String,
 }
 
@@ -380,7 +354,7 @@ impl FromArgumentBuilder for OpenFileOperation {
         Ok(OpenFileOperation { infile })
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         0
     }
 }
@@ -391,21 +365,21 @@ impl InputOperation for OpenFileOperation {
     }
 }
 
-struct WriteFileOperation {
+pub struct WriteFileOperation {
     outfile: String,
 }
 
 impl FromArgumentBuilder for WriteFileOperation {
     type Err = &'static str;
     fn init_from_arg(mut args: Vec<String>) -> Result<Self, Self::Err> {
-        if args.is_empty(){
+        if args.is_empty() {
             return Err("input parameters are missing");
         }
         let outfile = args.remove(0);
         Ok(WriteFileOperation { outfile })
     }
 
-    fn expected_arguments_count() -> i32 {
+    fn expected_arguments_count() -> usize {
         1
     }
 }
